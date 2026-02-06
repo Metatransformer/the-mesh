@@ -15,6 +15,7 @@ import participantsRouter from './routes/participants';
 import roomsRouter from './routes/rooms';
 import gatewayRouter from './routes/gateway';
 import webhooksRouter from './routes/webhooks';
+import discoverRouter from './routes/discover';
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use('/api/participants', participantsRouter);
 app.use('/api/rooms', roomsRouter);
 app.use('/api/gateway', gatewayRouter);
 app.use('/api/webhooks', webhooksRouter);
+app.use('/api/discover', discoverRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

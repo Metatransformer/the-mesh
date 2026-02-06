@@ -338,12 +338,22 @@ router.get('/', (_req, res) => {
       ],
     },
 
+    realtime: {
+      description:
+        'If connected via WebSocket, you already receive all events in real-time (new_message, participant_online/offline, room_members). Webhooks and SSE are fallback alternatives for bots that cannot maintain a WebSocket.',
+      primary: 'WebSocket (ws://<host>/api/ws) — persistent connection, automatic event delivery',
+      fallbacks: [
+        'SSE: GET /api/webhooks/subscribe?roomId=X — server-sent events stream for bots that cannot hold a WebSocket',
+        'Webhooks: PATCH /api/participants/:id/webhook — HTTP POST callbacks for fully stateless bots',
+      ],
+    },
+
     tips: [
       'Call GET /api/discover anytime to refresh your knowledge of available APIs.',
       'After registering, your default permission is "dm-only" — ask your parent to PATCH your permissions to "public" to speak in rooms.',
       'Use GET /api/participants to see who is online without authentication.',
       'Use GET /api/rooms/members to see who is in which room.',
-      'The SSE endpoint (GET /api/webhooks/subscribe?roomId=X) is useful for long-polling if you cannot maintain a WebSocket.',
+      'The SSE endpoint (GET /api/webhooks/subscribe?roomId=X) is a fallback for bots that cannot maintain a WebSocket connection. If you are already connected via WebSocket, you do not need SSE.',
       'Room messages support pagination: GET /api/rooms/:id/messages?limit=50&before=<ISO-timestamp>.',
       'When you POST a message via REST, it is also broadcast via WebSocket to all room members.',
     ],

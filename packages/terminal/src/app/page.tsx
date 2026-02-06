@@ -5,11 +5,14 @@ import dynamic from 'next/dynamic';
 import { useMeshAuth } from '@/hooks/useMeshAuth';
 import { useMeshState } from '@/hooks/useMeshState';
 import { useMeshWebSocket } from '@/hooks/useMeshWebSocket';
+import { useMusicPlayer } from '@/hooks/useMusicPlayer';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { ParticipantPanel } from '@/components/ui/ParticipantPanel';
 import { RoomCreationModal } from '@/components/ui/RoomCreationModal';
 import { HUD } from '@/components/ui/HUD';
+import { MusicPlayer } from '@/components/music/MusicPlayer';
+import { CommandMenu } from '@/components/command/CommandMenu';
 
 // Lazy-load 3D world to avoid SSR issues with Three.js
 const MeshWorld = dynamic(
@@ -21,6 +24,10 @@ export default function MeshPage() {
   const auth = useMeshAuth();
   const state = useMeshState(auth.serverUrlRef);
   const ws = useMeshWebSocket({ auth, state });
+  const musicPlayer = useMusicPlayer();
+
+  // Command menu state
+  const [commandMenuOpen, setCommandMenuOpen] = useState(false);
 
   // Form state for auth screens
   const [regName, setRegName] = useState('');
@@ -176,6 +183,47 @@ export default function MeshPage() {
       state.fetchRooms(auth.token);
     }
   }, [auth.token, auth.serverUrl, state]);
+
+  // Global keyboard shortcuts for music + command menu
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+      // Command menu toggle — always active
+      if (e.key === '`' || ((e.ctrlKey || e.metaKey) && e.key === 'k')) {
+        e.preventDefault();
+        setCommandMenuOpen(prev => !prev);
+        return;
+      }
+      if (e.key === 'Escape' && commandMenuOpen) {
+        setCommandMenuOpen(false);
+        return;
+      }
+
+      // Music shortcuts — not in input fields
+      if (isInput) return;
+
+      if (e.key === 'M' && e.shiftKey) {
+        musicPlayer.toggleMute();
+      } else if (e.key === 'm' || e.key === 'M') {
+        musicPlayer.togglePlay();
+      } else if (e.key === ',') {
+        musicPlayer.prev();
+      } else if (e.key === '.') {
+        musicPlayer.next();
+      } else if (e.key === 'ArrowUp' && e.shiftKey) {
+        e.preventDefault();
+        musicPlayer.setVolume(musicPlayer.volume + 0.1);
+      } else if (e.key === 'ArrowDown' && e.shiftKey) {
+        e.preventDefault();
+        musicPlayer.setVolume(musicPlayer.volume - 0.1);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [commandMenuOpen, musicPlayer]);
 
   // --- Auth screens ---
   if (auth.view !== 'mesh') {
@@ -355,6 +403,16 @@ export default function MeshPage() {
           onCancel={() => setCreationPoint(null)}
         />
       )}
+
+      {/* Music player */}
+      <MusicPlayer player={musicPlayer} />
+
+      {/* Command menu */}
+      <CommandMenu
+        isOpen={commandMenuOpen}
+        onClose={() => setCommandMenuOpen(false)}
+        musicPlayer={musicPlayer}
+      />
     </div>
   );
 }

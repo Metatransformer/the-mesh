@@ -48,3 +48,55 @@ html, body {
     box-shadow: 0 0 15px #00f0ff30, inset 0 0 10px #00f0ff10;
   }
 }
+
+/* Marquee scroll for long track names */
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-scroll {
+  display: inline-block;
+  padding-right: 2em;
+  animation: marquee-scroll 8s linear infinite;
+}
+
+/* Neon range slider for volume */
+.neon-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.neon-range::-webkit-slider-track {
+  background: rgba(0, 240, 255, 0.15);
+  border-radius: 2px;
+  height: 4px;
+}
+
+.neon-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 6px #00f0ff80, 0 0 12px #00f0ff40;
+  border: none;
+}
+
+.neon-range::-moz-range-track {
+  background: rgba(0, 240, 255, 0.15);
+  border-radius: 2px;
+  height: 4px;
+}
+
+.neon-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 6px #00f0ff80, 0 0 12px #00f0ff40;
+  border: none;
+}

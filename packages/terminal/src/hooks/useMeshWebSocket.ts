@@ -45,7 +45,9 @@ export function useMeshWebSocket({ auth, state }: UseMeshWebSocketOptions): UseM
       const t = authRef.current.tokenRef.current;
       if (!room || !t) return;
       try {
-        const res = await fetch(`/api/rooms/${room}/messages`, { headers: { Authorization: `Bearer ${t}` } });
+        const base = authRef.current.serverUrlRef.current;
+        const msgUrl = base ? `${base}/api/rooms/${room}/messages` : `/api/rooms/${room}/messages`;
+        const res = await fetch(msgUrl, { headers: { Authorization: `Bearer ${t}` } });
         if (res.ok) {
           const msgs: ClientMessage[] = await res.json();
           stateRef.current.setMessages(msgs);
@@ -57,12 +59,18 @@ export function useMeshWebSocket({ auth, state }: UseMeshWebSocketOptions): UseM
   const connect = useCallback((t: string) => {
     if (ws.current && ws.current.readyState <= 1) return;
     let wsUrl: string;
-    const envWs = process.env.NEXT_PUBLIC_INTERCHANGE_WS;
-    if (envWs) {
-      wsUrl = `${envWs}/api/ws`;
+    const sUrl = authRef.current.serverUrlRef.current;
+    if (sUrl) {
+      // Derive WS URL from server URL: http→ws, https→wss
+      wsUrl = sUrl.replace(/^http/, 'ws') + '/api/ws';
     } else {
-      const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-      wsUrl = `${proto}://${window.location.host}/api/ws`;
+      const envWs = process.env.NEXT_PUBLIC_INTERCHANGE_WS;
+      if (envWs) {
+        wsUrl = `${envWs}/api/ws`;
+      } else {
+        const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        wsUrl = `${proto}://${window.location.host}/api/ws`;
+      }
     }
     const socket = new WebSocket(wsUrl);
 
@@ -143,7 +151,9 @@ export function useMeshWebSocket({ auth, state }: UseMeshWebSocketOptions): UseM
       ws.current.send(JSON.stringify({ type: 'message', roomId, content }));
     } else {
       // HTTP fallback when WebSocket is not connected
-      fetch(`/api/rooms/${roomId}/messages`, {
+      const base = authRef.current.serverUrlRef.current;
+      const fallbackUrl = base ? `${base}/api/rooms/${roomId}/messages` : `/api/rooms/${roomId}/messages`;
+      fetch(fallbackUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ content }),

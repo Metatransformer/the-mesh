@@ -19,13 +19,14 @@ const MeshWorld = dynamic(
 
 export default function MeshPage() {
   const auth = useMeshAuth();
-  const state = useMeshState();
+  const state = useMeshState(auth.serverUrlRef);
   const ws = useMeshWebSocket({ auth, state });
 
   // Form state for auth screens
   const [regName, setRegName] = useState('');
   const [regType, setRegType] = useState<'user' | 'agent'>('user');
   const [loginToken, setLoginToken] = useState('');
+  const [serverUrlInput, setServerUrlInput] = useState('http://localhost:3001');
 
   // Room creation modal state
   const [creationPoint, setCreationPoint] = useState<[number, number, number] | null>(null);
@@ -37,6 +38,10 @@ export default function MeshPage() {
       try {
         const session = JSON.parse(saved);
         if (session.token) {
+          if (session.serverUrl) {
+            auth.setServerUrl(session.serverUrl);
+            setServerUrlInput(session.serverUrl);
+          }
           auth.login(session.token);
           if (session.activeRoom) {
             state.setActiveRoom(session.activeRoom);
@@ -46,8 +51,13 @@ export default function MeshPage() {
         }
       } catch {}
     }
-    // Auto-register via URL param ?user=Name
+    // Auto-register via URL param ?user=Name&server=http://...
     const params = new URLSearchParams(window.location.search);
+    const autoServer = params.get('server');
+    if (autoServer) {
+      auth.setServerUrl(autoServer);
+      setServerUrlInput(autoServer);
+    }
     const autoName = params.get('user');
     if (autoName) {
       handleAutoRegister(autoName);
@@ -70,12 +80,14 @@ export default function MeshPage() {
 
   const handleRegister = async () => {
     if (!regName.trim()) return;
+    auth.setServerUrl(serverUrlInput.trim());
     const token = await auth.register(regName.trim(), regType);
     if (token) ws.connect(token);
   };
 
   const handleLogin = () => {
     if (!loginToken.trim()) return;
+    auth.setServerUrl(serverUrlInput.trim());
     auth.login(loginToken.trim());
     ws.connect(loginToken.trim());
   };
@@ -123,7 +135,8 @@ export default function MeshPage() {
   const handleCreateRoomConfirm = useCallback(async (name: string, isPrivate: boolean, inviteIds: string[]) => {
     const posX = creationPoint ? creationPoint[0] : undefined;
     const posZ = creationPoint ? creationPoint[2] : undefined;
-    const res = await fetch('/api/rooms', {
+    const base = auth.serverUrl;
+    const res = await fetch(base ? `${base}/api/rooms` : '/api/rooms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
       body: JSON.stringify({ name, isPrivate, posX, posZ }),
@@ -132,7 +145,7 @@ export default function MeshPage() {
       const room = await res.json();
       // Invite selected participants
       for (const pid of inviteIds) {
-        await fetch(`/api/rooms/${room.id}/invite`, {
+        await fetch(base ? `${base}/api/rooms/${room.id}/invite` : `/api/rooms/${room.id}/invite`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
           body: JSON.stringify({ participantId: pid }),
@@ -143,7 +156,7 @@ export default function MeshPage() {
       state.fetchRoomMembers(auth.token);
     }
     setCreationPoint(null);
-  }, [auth.token, state, creationPoint]);
+  }, [auth.token, auth.serverUrl, state, creationPoint]);
 
   const handleParticipantsChanged = useCallback(async () => {
     await state.fetchParticipants();
@@ -153,7 +166,8 @@ export default function MeshPage() {
   }, [state, auth.token]);
 
   const handleRoomRename = useCallback(async (roomId: string, newName: string) => {
-    const res = await fetch(`/api/rooms/${roomId}`, {
+    const base = auth.serverUrl;
+    const res = await fetch(base ? `${base}/api/rooms/${roomId}` : `/api/rooms/${roomId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
       body: JSON.stringify({ name: newName }),
@@ -161,7 +175,7 @@ export default function MeshPage() {
     if (res.ok) {
       state.fetchRooms(auth.token);
     }
-  }, [auth.token, state]);
+  }, [auth.token, auth.serverUrl, state]);
 
   // --- Auth screens ---
   if (auth.view !== 'mesh') {
@@ -186,6 +200,17 @@ export default function MeshPage() {
             <p className="text-white/40 text-sm mt-2 font-mono">
               command center for humans &amp; agents
             </p>
+          </div>
+
+          {/* Server URL */}
+          <div>
+            <label className="block text-[10px] text-white/30 uppercase tracking-wider mb-1 font-mono">Server</label>
+            <input
+              value={serverUrlInput}
+              onChange={e => setServerUrlInput(e.target.value)}
+              placeholder="http://localhost:3001"
+              className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-2 text-xs text-[#e0e0ff]/60 font-mono placeholder-white/20 focus:outline-none focus:border-[#00f0ff]/30 transition-colors"
+            />
           </div>
 
           {/* Tab toggle */}
@@ -297,6 +322,7 @@ export default function MeshPage() {
         participants={state.participants}
         myId={auth.myId}
         token={auth.token}
+        serverUrl={auth.serverUrl}
         roomMembers={state.roomMembers}
         activeRoom={state.activeRoom}
         onParticipantsChanged={handleParticipantsChanged}

@@ -6,6 +6,8 @@ export interface UseMeshAuth {
   token: string;
   myId: string;
   myName: string;
+  serverUrl: string;
+  setServerUrl: (url: string) => void;
   view: 'login' | 'register' | 'mesh';
   setView: (v: 'login' | 'register' | 'mesh') => void;
   register: (name: string, type: 'user' | 'agent') => Promise<string | null>;
@@ -13,6 +15,7 @@ export interface UseMeshAuth {
   logout: () => void;
   onAuthSuccess: (token: string, id: string, name: string) => void;
   tokenRef: React.RefObject<string>;
+  serverUrlRef: React.RefObject<string>;
 }
 
 export function useMeshAuth(): UseMeshAuth {
@@ -20,10 +23,17 @@ export function useMeshAuth(): UseMeshAuth {
   const [token, setToken] = useState('');
   const [myId, setMyId] = useState('');
   const [myName, setMyName] = useState('');
+  const [serverUrl, _setServerUrl] = useState('');
   const tokenRef = useRef<string>('');
+  const serverUrlRef = useRef<string>('');
 
-  const saveSession = useCallback((t: string, id: string, name: string, activeRoom?: string | null) => {
-    localStorage.setItem('mesh-session', JSON.stringify({ token: t, id, name, activeRoom: activeRoom ?? null }));
+  const setServerUrl = useCallback((url: string) => {
+    _setServerUrl(url);
+    serverUrlRef.current = url;
+  }, []);
+
+  const saveSession = useCallback((t: string, id: string, name: string, activeRoom?: string | null, sUrl?: string) => {
+    localStorage.setItem('mesh-session', JSON.stringify({ token: t, id, name, activeRoom: activeRoom ?? null, serverUrl: sUrl ?? serverUrlRef.current }));
   }, []);
 
   const onAuthSuccess = useCallback((t: string, id: string, name: string) => {
@@ -36,7 +46,9 @@ export function useMeshAuth(): UseMeshAuth {
   }, [saveSession]);
 
   const register = useCallback(async (name: string, type: 'user' | 'agent'): Promise<string | null> => {
-    const res = await fetch('/api/auth/register', {
+    const base = serverUrlRef.current;
+    const url = base ? `${base}/api/auth/register` : '/api/auth/register';
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, type }),
@@ -63,7 +75,9 @@ export function useMeshAuth(): UseMeshAuth {
     setToken('');
     setMyId('');
     setMyName('');
+    _setServerUrl('');
     tokenRef.current = '';
+    serverUrlRef.current = '';
     setView('register');
   }, []);
 
@@ -71,6 +85,8 @@ export function useMeshAuth(): UseMeshAuth {
     token,
     myId,
     myName,
+    serverUrl,
+    setServerUrl,
     view,
     setView,
     register,
@@ -78,5 +94,6 @@ export function useMeshAuth(): UseMeshAuth {
     logout,
     onAuthSuccess,
     tokenRef,
+    serverUrlRef,
   };
 }

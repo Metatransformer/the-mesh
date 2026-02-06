@@ -7,12 +7,13 @@ import { NPC_PRESETS, type NpcPreset } from '@/lib/npc-presets';
 interface NpcSpawnModalProps {
   token: string;
   myId: string;
+  serverUrl: string;
   activeRoom: string | null;
   onSpawned: () => void;
   onCancel: () => void;
 }
 
-export function NpcSpawnModal({ token, myId, activeRoom, onSpawned, onCancel }: NpcSpawnModalProps) {
+export function NpcSpawnModal({ token, myId, serverUrl, activeRoom, onSpawned, onCancel }: NpcSpawnModalProps) {
   const [selected, setSelected] = useState<NpcPreset | null>(null);
   const [name, setName] = useState('');
   const [permission, setPermission] = useState<string>('');
@@ -34,7 +35,8 @@ export function NpcSpawnModal({ token, myId, activeRoom, onSpawned, onCancel }: 
 
     try {
       // 1. Register the agent
-      const regRes = await fetch('/api/auth/register', {
+      const base = serverUrl;
+      const regRes = await fetch(base ? `${base}/api/auth/register` : '/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -52,7 +54,7 @@ export function NpcSpawnModal({ token, myId, activeRoom, onSpawned, onCancel }: 
 
       // 2. Set permission if different from default
       if (permission !== 'dm-only') {
-        await fetch(`/api/participants/${agent.id}/permissions`, {
+        await fetch(base ? `${base}/api/participants/${agent.id}/permissions` : `/api/participants/${agent.id}/permissions`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ permission }),
@@ -61,7 +63,7 @@ export function NpcSpawnModal({ token, myId, activeRoom, onSpawned, onCancel }: 
 
       // 3. Invite to active room if one is selected
       if (activeRoom) {
-        await fetch(`/api/rooms/${activeRoom}/invite`, {
+        await fetch(base ? `${base}/api/rooms/${activeRoom}/invite` : `/api/rooms/${activeRoom}/invite`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ participantId: agent.id }),

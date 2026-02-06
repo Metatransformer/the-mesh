@@ -1,6 +1,12 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, type RefObject } from 'react';
+
+/** Prefix a path with serverUrl when set, otherwise use relative path (Next.js proxy) */
+function apiUrl(serverUrlRef: RefObject<string>, path: string): string {
+  const base = serverUrlRef.current;
+  return base ? `${base}${path}` : path;
+}
 
 export interface ClientParticipant {
   id: string;
@@ -85,7 +91,7 @@ const defaultFederationStatus: FederationStatus = {
   configured: false,
 };
 
-export function useMeshState(): UseMeshState {
+export function useMeshState(serverUrlRef: RefObject<string>): UseMeshState {
   const [rooms, setRooms] = useState<ClientRoom[]>([]);
   const [participants, setParticipants] = useState<ClientParticipant[]>([]);
   const [remoteParticipants, setRemoteParticipants] = useState<RemoteParticipant[]>([]);
@@ -102,47 +108,47 @@ export function useMeshState(): UseMeshState {
   }, []);
 
   const fetchRooms = useCallback(async (token: string) => {
-    const res = await fetch('/api/rooms', { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(apiUrl(serverUrlRef, '/api/rooms'), { headers: { Authorization: `Bearer ${token}` } });
     if (res.ok) setRooms(await res.json());
-  }, []);
+  }, [serverUrlRef]);
 
   const fetchParticipants = useCallback(async () => {
-    const res = await fetch('/api/participants');
+    const res = await fetch(apiUrl(serverUrlRef, '/api/participants'));
     if (res.ok) setParticipants(await res.json());
-  }, []);
+  }, [serverUrlRef]);
 
   const fetchMessages = useCallback(async (roomId: string, token: string) => {
-    const res = await fetch(`/api/rooms/${roomId}/messages`, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(apiUrl(serverUrlRef, `/api/rooms/${roomId}/messages`), { headers: { Authorization: `Bearer ${token}` } });
     if (res.ok) setMessages(await res.json());
-  }, []);
+  }, [serverUrlRef]);
 
   const fetchRemoteParticipants = useCallback(async () => {
     try {
-      const res = await fetch('/api/gateway/participants');
+      const res = await fetch(apiUrl(serverUrlRef, '/api/gateway/participants'));
       if (res.ok) setRemoteParticipants(await res.json());
     } catch {}
-  }, []);
+  }, [serverUrlRef]);
 
   const fetchRoomMembers = useCallback(async (token: string) => {
     try {
-      const res = await fetch('/api/rooms/members', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(apiUrl(serverUrlRef, '/api/rooms/members'), { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) setRoomMembers(await res.json());
     } catch {}
-  }, []);
+  }, [serverUrlRef]);
 
   const fetchRoomPositions = useCallback(async () => {
     try {
-      const res = await fetch('/api/rooms/positions');
+      const res = await fetch(apiUrl(serverUrlRef, '/api/rooms/positions'));
       if (res.ok) setRoomPositions(await res.json());
     } catch {}
-  }, []);
+  }, [serverUrlRef]);
 
   const checkFederationStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/gateway/status');
+      const res = await fetch(apiUrl(serverUrlRef, '/api/gateway/status'));
       if (res.ok) setFederationStatus(await res.json());
     } catch {}
-  }, []);
+  }, [serverUrlRef]);
 
   const clearAll = useCallback(() => {
     setRooms([]);

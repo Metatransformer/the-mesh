@@ -4,20 +4,23 @@ import { useState } from 'react';
 import type { ClientParticipant } from '@/hooks/useMeshState';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { NpcSpawnModal } from '@/components/ui/NpcSpawnModal';
+import { BotOnboardModal } from '@/components/ui/BotOnboardModal';
 import { ParticipantList } from '@/components/chat/ParticipantList';
 
 interface ParticipantPanelProps {
   participants: ClientParticipant[];
   myId: string;
   token: string;
+  serverUrl: string;
   roomMembers?: Record<string, string[]>;
   activeRoom?: string | null;
   onParticipantsChanged?: () => void;
 }
 
-export function ParticipantPanel({ participants, myId, token, roomMembers, activeRoom, onParticipantsChanged }: ParticipantPanelProps) {
+export function ParticipantPanel({ participants, myId, token, serverUrl, roomMembers, activeRoom, onParticipantsChanged }: ParticipantPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [showSpawnModal, setShowSpawnModal] = useState(false);
+  const [showBotModal, setShowBotModal] = useState(false);
 
   if (collapsed) {
     return (
@@ -48,6 +51,15 @@ export function ParticipantPanel({ participants, myId, token, roomMembers, activ
           </span>
           <div className="flex items-center gap-1">
             <button
+              onClick={() => setShowBotModal(true)}
+              className="p-1 text-[#00f0ff]/60 hover:text-[#00f0ff] transition-colors"
+              title="Bring in your bot"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-2.54 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+              </svg>
+            </button>
+            <button
               onClick={() => setShowSpawnModal(true)}
               className="p-1 text-[#ff00ff]/60 hover:text-[#ff00ff] transition-colors"
               title="Spawn NPC"
@@ -75,6 +87,7 @@ export function ParticipantPanel({ participants, myId, token, roomMembers, activ
             allParticipants={participants}
             myId={myId}
             token={token}
+            serverUrl={serverUrl}
             roomMembers={roomMembers}
             activeRoom={activeRoom}
             onParticipantsChanged={onParticipantsChanged}
@@ -86,12 +99,22 @@ export function ParticipantPanel({ participants, myId, token, roomMembers, activ
         <NpcSpawnModal
           token={token}
           myId={myId}
+          serverUrl={serverUrl}
           activeRoom={activeRoom ?? null}
           onSpawned={() => {
             setShowSpawnModal(false);
             onParticipantsChanged?.();
           }}
           onCancel={() => setShowSpawnModal(false)}
+        />
+      )}
+
+      {showBotModal && (
+        <BotOnboardModal
+          token={token}
+          myId={myId}
+          serverUrl={serverUrl}
+          onCancel={() => setShowBotModal(false)}
         />
       )}
     </>

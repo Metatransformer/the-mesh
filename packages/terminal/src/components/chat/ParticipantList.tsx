@@ -8,6 +8,7 @@ interface ParticipantListProps {
   allParticipants: ClientParticipant[];
   myId: string;
   token: string;
+  serverUrl: string;
   roomMembers?: Record<string, string[]>;
   activeRoom?: string | null;
   onParticipantsChanged?: () => void;
@@ -40,6 +41,7 @@ function TreeNodeRow({
   depth,
   myId,
   token,
+  serverUrl,
   collapsed,
   onToggle,
   allParticipants,
@@ -49,6 +51,7 @@ function TreeNodeRow({
   depth: number;
   myId: string;
   token: string;
+  serverUrl: string;
   collapsed: Set<string>;
   onToggle: (id: string) => void;
   allParticipants: ClientParticipant[];
@@ -65,8 +68,10 @@ function TreeNodeRow({
     setPerm(p.permission);
   }, [p.permission]);
 
+  const base = serverUrl;
+
   const changePerm = async (newPerm: string) => {
-    const res = await fetch(`/api/participants/${p.id}/permissions`, {
+    const res = await fetch(base ? `${base}/api/participants/${p.id}/permissions` : `/api/participants/${p.id}/permissions`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ permission: newPerm }),
@@ -75,7 +80,7 @@ function TreeNodeRow({
   };
 
   const handleDelete = async () => {
-    const res = await fetch(`/api/participants/${p.id}`, {
+    const res = await fetch(base ? `${base}/api/participants/${p.id}` : `/api/participants/${p.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -83,7 +88,7 @@ function TreeNodeRow({
   };
 
   const handleReparent = async (newParentId: string) => {
-    const res = await fetch(`/api/participants/${p.id}/parent`, {
+    const res = await fetch(base ? `${base}/api/participants/${p.id}/parent` : `/api/participants/${p.id}/parent`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ parentId: newParentId }),
@@ -216,6 +221,7 @@ function TreeNodeRow({
           depth={depth + 1}
           myId={myId}
           token={token}
+          serverUrl={serverUrl}
           collapsed={collapsed}
           onToggle={onToggle}
           allParticipants={allParticipants}
@@ -226,7 +232,7 @@ function TreeNodeRow({
   );
 }
 
-export function ParticipantList({ participants, allParticipants, myId, token, roomMembers, activeRoom, onParticipantsChanged }: ParticipantListProps) {
+export function ParticipantList({ participants, allParticipants, myId, token, serverUrl, roomMembers, activeRoom, onParticipantsChanged }: ParticipantListProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   // Filter to active room members if provided
@@ -265,6 +271,7 @@ export function ParticipantList({ participants, allParticipants, myId, token, ro
           depth={0}
           myId={myId}
           token={token}
+          serverUrl={serverUrl}
           collapsed={collapsed}
           onToggle={handleToggle}
           allParticipants={allParticipants}

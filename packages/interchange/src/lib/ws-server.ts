@@ -67,13 +67,11 @@ function send(ws: WebSocket, msg: WsMessage) {
 }
 
 export function broadcast(roomId: string, msg: WsMessage, excludeId?: string) {
-  console.log(`[WS] broadcast to room ${roomId}, connections: ${getConnections().size}, excludeId: ${excludeId || 'none'}`);
   const members = getRoomMembers(roomId);
   for (const memberId of members) {
     if (memberId === excludeId) continue;
     const conn = getConnections().get(memberId);
     if (conn && conn.rooms.has(roomId)) {
-      console.log(`[WS] sending to ${memberId}`);
       send(conn, msg);
     }
   }
@@ -103,7 +101,6 @@ function broadcastRoomMembers() {
 }
 
 function handleConnection(ws: WebSocket) {
-  console.log('[WS] New WebSocket connection established');
   const socket = ws as AuthedSocket;
   socket.rooms = new Set();
   socket.isAlive = true;

@@ -1,0 +1,9 @@
+{
+  "name": "@the-mesh/client",
+  "version": "0.1.0",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": { "build": "tsc" },
+  "dependencies": { "ws": "^8.18.0" },
+  "devDependencies": { "@types/ws": "^8.5.13", "@types/node": "^22.10.0", "typescript": "^5.7.2" }
+}

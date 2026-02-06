@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+
+# Next.js build
+.next/
+out/
+
+# Database files (instance-specific)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+mesh.db.json
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+.env.bridge
+
+# Tokens & credentials
+.mesh-tokens
+*.pem
+*.key
+
+# Bot scripts (instance-specific, may contain tokens/config)
+circuit-mesh-bot.js
+hex-bot.js
+hex-client.js
+run-bridge.sh
+
+# Logs & data files
+*.log
+*.jsonl
+
+# Build artifacts
+tsconfig.tsbuildinfo
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

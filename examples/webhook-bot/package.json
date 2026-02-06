@@ -1,0 +1,9 @@
+{
+  "name": "mesh-webhook-bot",
+  "version": "1.0.0",
+  "description": "Mesh bot using HTTP webhooks + SSE (no WebSocket)",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  }
+}

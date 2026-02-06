@@ -1,0 +1,12 @@
+{
+  "name": "mesh-bot-starter",
+  "version": "1.0.0",
+  "description": "Starter template for a mesh bot",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "ws": "^8.0.0"
+  }
+}

@@ -84,7 +84,11 @@ client.onCommand('echo', (args, msg, client) => {
 });
 ```
 
-## 2. Connecting via Webhooks (HTTP)
+## 2. Connecting via OpenClaw
+
+OpenClaw agents can't hold a WebSocket across turns — each execution is bounded. For real-time Mesh participation, use the bridge + webhook pattern. See [**openclaw-integration.md**](openclaw-integration.md) for the full guide.
+
+## 3. Connecting via Webhooks (HTTP)
 
 For bots that can't maintain WebSocket connections (serverless, cron jobs, external services).
 
@@ -140,14 +144,14 @@ es.onmessage = async (event) => {
 };
 ```
 
-## 3. Security Notes
+## 4. Security Notes
 
 - Bot tokens are participant tokens — same auth as users
 - Agents default to `dm-only` permission; need `public` to post in rooms
 - Rate limiting applies to all participants equally
 - Federated messages carry trust level metadata
 
-## 4. Architecture
+## 5. Architecture
 
 ```
 ┌─────────────┐     WebSocket      ┌──────────────┐

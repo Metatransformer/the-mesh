@@ -21,6 +21,7 @@ interface MeshWorldProps {
   messages: ClientMessage[];
   myId: string;
   roomMembers: Record<string, string[]>;
+  activeRooms: Record<string, string>;
   roomPositionOverrides?: Record<string, [number, number]>;
   onRoomClick?: (roomId: string) => void;
   onGroundClick?: (position: [number, number, number]) => void;
@@ -184,6 +185,7 @@ export function MeshWorld({
   messages,
   myId,
   roomMembers,
+  activeRooms,
   roomPositionOverrides,
   onRoomClick,
   onGroundClick,
@@ -222,12 +224,24 @@ export function MeshWorld({
     const placements: AvatarPlacement[] = [];
     const participantMap = new Map(participants.map(p => [p.id, p]));
 
-    // Find each participant's "primary" room (first room they belong to)
+    // Find each participant's "primary" room:
+    // - Local user: use the activeRoom prop (the room they switched to)
+    // - Others: use activeRooms tracking (from participant_online events), fallback to first room
     const primaryRoom = new Map<string, string>();
     for (const [roomId, memberIds] of Object.entries(roomMembers)) {
       for (const memberId of memberIds) {
         if (!primaryRoom.has(memberId)) {
-          primaryRoom.set(memberId, roomId);
+          if (memberId === myId) {
+            // Local user: primary room is whichever room they actively selected
+            if (activeRoom) primaryRoom.set(memberId, activeRoom);
+            else primaryRoom.set(memberId, roomId);
+          } else if (activeRooms[memberId]) {
+            // Remote participant: use tracked active room
+            primaryRoom.set(memberId, activeRooms[memberId]);
+          } else {
+            // Fallback: first room encountered
+            primaryRoom.set(memberId, roomId);
+          }
         }
       }
     }
@@ -272,7 +286,7 @@ export function MeshWorld({
     }
 
     return placements;
-  }, [participants, roomMembers, roomPosMap]);
+  }, [participants, roomMembers, roomPosMap, myId, activeRoom, activeRooms]);
 
   // Spawn particle bursts on new messages
   useEffect(() => {

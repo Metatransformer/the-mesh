@@ -299,6 +299,7 @@ export default function MeshPage() {
         messages={state.messages}
         myId={auth.myId}
         roomMembers={state.roomMembers}
+        activeRooms={state.activeRooms}
         roomPositionOverrides={state.roomPositions}
         onRoomClick={handleJoinRoom}
         onGroundClick={handleGroundClick}

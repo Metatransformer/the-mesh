@@ -65,6 +65,7 @@ export interface UseMeshState {
   federationStatus: FederationStatus;
   roomMembers: Record<string, string[]>;
   roomPositions: Record<string, [number, number]>;
+  activeRooms: Record<string, string>;
   setRooms: React.Dispatch<React.SetStateAction<ClientRoom[]>>;
   setParticipants: React.Dispatch<React.SetStateAction<ClientParticipant[]>>;
   setRemoteParticipants: React.Dispatch<React.SetStateAction<RemoteParticipant[]>>;
@@ -72,6 +73,7 @@ export interface UseMeshState {
   setActiveRoom: (roomId: string | null) => void;
   setFederationStatus: React.Dispatch<React.SetStateAction<FederationStatus>>;
   setRoomMembers: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
+  setActiveRooms: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   activeRoomRef: React.RefObject<string | null>;
   fetchRooms: (token: string) => Promise<void>;
   fetchParticipants: () => Promise<void>;
@@ -100,6 +102,7 @@ export function useMeshState(serverUrlRef: RefObject<string>): UseMeshState {
   const [federationStatus, setFederationStatus] = useState<FederationStatus>(defaultFederationStatus);
   const [roomMembers, setRoomMembers] = useState<Record<string, string[]>>({});
   const [roomPositions, setRoomPositions] = useState<Record<string, [number, number]>>({});
+  const [activeRooms, setActiveRooms] = useState<Record<string, string>>({});
   const activeRoomRef = useRef<string | null>(null);
 
   const setActiveRoom = useCallback((roomId: string | null) => {
@@ -159,6 +162,7 @@ export function useMeshState(serverUrlRef: RefObject<string>): UseMeshState {
     setFederationStatus(defaultFederationStatus);
     setRoomMembers({});
     setRoomPositions({});
+    setActiveRooms({});
   }, [setActiveRoom]);
 
   return {
@@ -170,6 +174,7 @@ export function useMeshState(serverUrlRef: RefObject<string>): UseMeshState {
     federationStatus,
     roomMembers,
     roomPositions,
+    activeRooms,
     setRooms,
     setParticipants,
     setRemoteParticipants,
@@ -177,6 +182,7 @@ export function useMeshState(serverUrlRef: RefObject<string>): UseMeshState {
     setActiveRoom,
     setFederationStatus,
     setRoomMembers,
+    setActiveRooms,
     activeRoomRef,
     fetchRooms,
     fetchParticipants,

@@ -105,6 +105,9 @@ export function useMeshWebSocket({ auth, state }: UseMeshWebSocketOptions): UseM
         currentState.fetchMessages(msg.roomId, t);
       } else if (msg.type === 'participant_online' || msg.type === 'participant_offline') {
         currentState.fetchParticipants();
+        if (msg.type === 'participant_online' && msg.roomId && msg.participantId) {
+          currentState.setActiveRooms(prev => ({ ...prev, [msg.participantId]: msg.roomId }));
+        }
       } else if (msg.type === 'remote_participants') {
         currentState.setRemoteParticipants(msg.participants as RemoteParticipant[] || []);
       } else if (msg.type === 'room_members') {
